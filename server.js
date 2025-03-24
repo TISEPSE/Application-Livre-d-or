@@ -1,19 +1,44 @@
-let express = require("express")
-let bodyParser = require('body-parser')
+let express = require("express");
 
-let app = express()
+var session = require('express-session')
 
+let bodyParser = require("body-parser");
 
-app.set('view engine', 'ejs')
+let app = express();
 
-app.use("/assets", express.static('public'))
+// Moteur de template
+app.set("view engine", "ejs");
 
+// Middleware
+app.use("/assets", express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(session({
+    secret: 'skibidi',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+  }))
+
+// Routes
 app.get("/", (request, response) => {
-    response.render('pages/index',{test:'Salut'})
-})
+    if(request.session.error) {
+        response.locals.error = request.session.error
+        request.session.error = undefined
+        
+    };
+});
 
 app.post("/", (request, response) => {
-    console.log(request.body)
-})
+   
+    if (request.body.message === undefined || request.body.message === "") {
 
-app.listen(8080)
+        request.session.error = "Il y a une erreur"
+
+        response.redirect("/")
+    }
+
+});
+
+// Lancer le serveur
+app.listen(8080, () => console.log("Serveur démarré sur le port 8080"));
